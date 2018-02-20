@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import static java.lang.Integer.max;
 import static java.lang.Integer.min;
+import static java.time.LocalTime.now;
 
 public class Main {
 
@@ -23,8 +24,8 @@ public class Main {
     private static TaskDTO loadFile() {
         TaskDTO task = new TaskDTO();
 
-        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\small.in";
-//        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\medium.in";
+//        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\small.in";
+        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\medium.in";
 //        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\big.in";
 
         try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
@@ -56,7 +57,7 @@ public class Main {
     }
 
     private static boolean checkBorder(TaskDTO task, int r, int c){
-        return (r>0) && ( c > 0) && (r <= task.r) && (c <= task.c);
+        return (r>0) && ( c > 0) && (r < task.r) && (c < task.c);
     }
 
     private static CellSequence tryConcatRectangles(TaskDTO task, CellSequence firstS, CellSequence secondS){
@@ -75,6 +76,7 @@ public class Main {
         // check border
         if (checkBorder(task, fr, fc)) {
             // check type
+            //System.out.println("debug: "+ sr + " " + sc + " " + fr + " " + fc);
             if (task.cells[sr][sc].cellType == task.cells[fr][fc].cellType) {
                 // copy all sequences to the type
                 for (CellSequence sequence : task.cells[sr][sc].oldCellSequences) {
@@ -117,14 +119,16 @@ public class Main {
 
     private static void checkPartners(TaskDTO task, int sr, int sc, int fr, int fc){
     // try to merge all sequence of the cells
-        if (task.cells[sr][sc].cellType != task.cells[fr][fc].cellType) {
-            for (CellSequence sequenceS : task.cells[sr][sc].oldCellSequences) {
-                for (CellSequence sequenceF : task.cells[fr][fc].oldCellSequences) {
-                    // Check before copying size of sequence
-                    CellSequence newSequence = tryConcatRectangles(task, sequenceS, sequenceF);
-                    if (newSequence == null) {
-                    } else {
-                        task.cells[newSequence.minR][newSequence.minC].cellSequences.add(newSequence);
+        if ((fr > -1 ) && (fr < task.r) && (fc > -1 ) && (fc < task.c) ) {
+            if (task.cells[sr][sc].cellType != task.cells[fr][fc].cellType) {
+                for (CellSequence sequenceS : task.cells[sr][sc].oldCellSequences) {
+                    for (CellSequence sequenceF : task.cells[fr][fc].oldCellSequences) {
+                        // Check before copying size of sequence
+                        CellSequence newSequence = tryConcatRectangles(task, sequenceS, sequenceF);
+                        if (newSequence == null) {
+                        } else {
+                            task.cells[newSequence.minR][newSequence.minC].cellSequences.add(newSequence);
+                        }
                     }
                 }
             }
@@ -207,17 +211,22 @@ public class Main {
         int score = 0;
         int number = 0;
         for (CellSequence sequence : sequences) {
-            number = number++;
+            number = ++number;
+            score = score + ((sequence.maxR - sequence.minR +1) * ( sequence.maxC- sequence.minC +1));
             System.out.println(number + " " + sequence.minC + " " + sequence.minR  + " " + sequence.maxC + " " + sequence.maxR);
         }
+        System.out.println("score: " + score);
     }
 
     public static void main(String[] args) {
-        System.out.println("check");
+        System.out.println("check start " + now());
         TaskDTO task = loadFile();
         loopForSequences(task);
+        System.out.println("check after sequences " + now());
         loopForMerge(task);
+        System.out.println("check after merge " + now());
         ArrayList<CellSequence> selectedSequence = loopForFill(task);
+        System.out.println("check after fill " + now());
         outputSequences(selectedSequence);
         System.out.println(task.r);
         System.out.println(task.c);
