@@ -124,11 +124,7 @@ public class Main {
                     CellSequence newSequence = tryConcatRectangles(task, sequenceS, sequenceF);
                     if (newSequence == null) {
                     } else {
-                        for (int i = newSequence.minR; i < (newSequence.maxR + 1); i++ ){
-                            for (int j = newSequence.minC; j < (newSequence.maxC + 1); j++ ){
-                                task.cells[i][j].cellSequences.add(newSequence);
-                            }
-                        }
+                        task.cells[newSequence.minR][newSequence.minC].cellSequences.add(newSequence);
                     }
                 }
             }
@@ -136,7 +132,7 @@ public class Main {
     }
 
 
-    private static void findMergeToCell(TaskDTO task, int r, int c){
+    private static void findMergeForCell(TaskDTO task, int r, int c){
         // cycle by first line
         for (int j = 1; j < task.h; j++ ){
             checkPartners(task, r, c, r, c+j);
@@ -155,7 +151,7 @@ public class Main {
         nextTurnPreparing(task);
         for (int i = 0; i < task.r; i++) {
             for (int j = 0; j < task.c; j++) {
-                findMergeToCell(task, i,j);
+                findMergeForCell(task, i,j);
             }
         }
     }
@@ -172,13 +168,20 @@ public class Main {
                 } else {
                     // select the min sequence
                     if ((sequence.maxR - sequence.minR +1) * ( sequence.maxC- sequence.minC +1) > (selectedSequence.maxR - selectedSequence.minR +1) * ( selectedSequence.maxC- selectedSequence.minC +1)) {
-
+                        selectedSequence = sequence;
                     }
                 }
             }
         }
-        // fill the sequence cells
-        // return CellSequence
+        return selectedSequence;
+    }
+
+    private static void fillCellsWithSequence(TaskDTO task, CellSequence sequence) {
+        for (int i = sequence.minR; i < (sequence.maxR + 1); i++) {
+            for (int j = sequence.minC; j < (sequence.maxC + 1); j++) {
+                task.cells[i][j].cellSequences.add(sequence);
+            }
+        }
     }
 
     // change on set sequence info in left top corner
@@ -193,10 +196,20 @@ public class Main {
                 if (selectedSequence == null) {
                 } else {
                     selectedSequences.add(selectedSequence);
+                    fillCellsWithSequence(task, selectedSequence);
                 }
             }
         }
         return selectedSequences;
+    }
+
+    private static void outputSequences(ArrayList<CellSequence> sequences){
+        int score = 0;
+        int number = 0;
+        for (CellSequence sequence : sequences) {
+            number = number++;
+            System.out.println(number + " " + sequence.minC + " " + sequence.minR  + " " + sequence.maxC + " " + sequence.maxR);
+        }
     }
 
     public static void main(String[] args) {
@@ -205,6 +218,7 @@ public class Main {
         loopForSequences(task);
         loopForMerge(task);
         ArrayList<CellSequence> selectedSequence = loopForFill(task);
+        outputSequences(selectedSequence);
         System.out.println(task.r);
         System.out.println(task.c);
         System.out.println(task.l);
