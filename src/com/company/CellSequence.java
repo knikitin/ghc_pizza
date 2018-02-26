@@ -1,19 +1,16 @@
 package com.company;
 
 public class CellSequence {
-    TaskDTO task;
     int minR, maxR, minC, maxC;
 
-    CellSequence(TaskDTO task, int r, int c){
-        this.task = task;
+    CellSequence(int r, int c){
         this.minR = r;
         this.maxR = r;
         this.minC = c;
         this.maxC = c;
     }
 
-    CellSequence(TaskDTO task, int sr, int sc, int fr, int fc){
-        this.task = task;
+    CellSequence(int sr, int sc, int fr, int fc){
         this.minR = sr;
         this.maxR = fr;
         this.minC = sc;

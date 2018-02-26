@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import static java.lang.Integer.max;
-import static java.lang.Integer.min;
 import static java.time.LocalTime.now;
 
 public class Main {
@@ -25,8 +23,8 @@ public class Main {
         TaskDTO task = new TaskDTO();
 
 //        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\small.in";
-        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\medium.in";
-//        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\big.in";
+//        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\medium.in";
+        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\big.in";
 
         try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
             String[] fileContent = stream.toArray(String[]::new);
@@ -47,132 +45,74 @@ public class Main {
         return task;
     }
 
-    private static  void nextTurnPreparing(TaskDTO task) {
-        for (int i = 0; i < task.r; i++) {
-            for (int j = 0; j < task.c; j++) {
-                task.cells[i][j].oldCellSequences = task.cells[i][j].cellSequences;
-                task.cells[i][j].cellSequences = new ArrayList<>();
+    private static void fillCellsWithSequence(TaskDTO task, CellSequence sequence) {
+        for (int i = sequence.minR; i < (sequence.maxR + 1); i++) {
+            for (int j = sequence.minC; j < (sequence.maxC + 1); j++) {
+                task.cells[i][j].mainCellSequences = sequence;
             }
         }
     }
 
-    private static boolean checkBorder(TaskDTO task, int r, int c){
-        return (r>0) && ( c > 0) && (r < task.r) && (c < task.c);
-    }
-
-    private static CellSequence tryConcatRectangles(TaskDTO task, CellSequence firstS, CellSequence secondS){
-        int minR = min(firstS.minR, secondS.minR);
-        int minC = min(firstS.minC, secondS.minC);
-        int maxR = max(firstS.maxR, secondS.maxR);
-        int maxC = max(firstS.maxC, secondS.maxC);
-        int s = (maxR- minR +1) * (maxC- minC +1);
-        if (s <= task.h) {
-            return new CellSequence(task, minR, minC, maxR, maxC);
+    private static void outputSequences(ArrayList<CellSequence> sequences) {
+        int score = 0;
+        int number = 0;
+        for (CellSequence sequence : sequences) {
+            number = ++number;
+            score = score + ((sequence.maxR - sequence.minR + 1) * (sequence.maxC - sequence.minC + 1));
+            System.out.println(number + " " + sequence.minC + " " + sequence.minR + " " + sequence.maxC + " " + sequence.maxR);
         }
-        return null;
+        System.out.println("score: " + score);
     }
 
-    private static void copySequence(TaskDTO task, int sr, int sc, int fr, int fc){
-        // check border
-        if (checkBorder(task, fr, fc)) {
-            // check type
-            //System.out.println("debug: "+ sr + " " + sc + " " + fr + " " + fc);
-            if (task.cells[sr][sc].cellType == task.cells[fr][fc].cellType) {
-                // copy all sequences to the type
-                for (CellSequence sequence : task.cells[sr][sc].oldCellSequences) {
-                    // Check before copying size of sequence
-                    CellSequence newSequence = tryConcatRectangles(task, sequence, new CellSequence(task, fr,fc));
-                    if (newSequence == null) {
-                    } else {
-                        task.cells[fr][fc].cellSequences.add(newSequence);
+    private static boolean checkPossibility(TaskDTO task, int sr, int sc, int fr, int fc) {
+        // try to merge all sequence of the cells
+        int countT1 = 0;
+        int countT2 = 0;
+        for (int i = sr; i < fr + 1; i++) {
+            for (int j = sc; j < fc + 1; j++) {
+                if (task.cells[sr][sc].cellType == task.cells[i][j].cellType) {
+                    countT1 = ++countT1;
+                } else {
+                    countT2 = ++countT2;
+                }
+            }
+        }
+        return ((task.l <= countT1) && (task.l <= countT2));
+    }
+
+    private static void findInCell(TaskDTO task, int r, int c) {
+        for (int j = 0; (j < task.h) && (j + c < task.c); j++) {
+            if (task.cells[r][c + j].mainCellSequences == null) {
+                int di = task.h / (j + 1);
+                for (int i = 0; (i < di) && (i + r < task.r); i++) {
+                    if (checkPossibility(task, r, c, r + i, c + j)) {
+                        CellSequence cur = new CellSequence(r, c, r + i, c + j);
+                        task.cells[r][c].cellSequences.add(cur);
                     }
+                    ;
                 }
+            } else {
+                break;
             }
         }
     }
 
-    private static void sequenceNextStep(TaskDTO task, int r, int c){
-        // cycle by first line
-        for (int j = 1; j < task.h; j++ ){
-            copySequence(task, r, c, r, c+j);
-        }
-        // cycle by diapason
-        for (int i = 1; i < task.h; i++ ){
-            int dj = task.h / (i+1);
-            dj = dj - 1;
-            for (int j = -dj; j < dj + 1; j++ ){
-                copySequence(task, r, c, r+i, c+j);
-            }
-        }
-    }
-
-    private static void loopForSequences(TaskDTO task){
-        for (int t = 1; t< task.l; t++) {
-            nextTurnPreparing(task);
-            for (int i = 0; i < task.r; i++) {
-                for (int j = 0; j < task.c; j++) {
-                    sequenceNextStep(task, i,j);
-                }
-            }
-        }
-    }
-
-    private static void checkPartners(TaskDTO task, int sr, int sc, int fr, int fc){
-    // try to merge all sequence of the cells
-        if ((fr > -1 ) && (fr < task.r) && (fc > -1 ) && (fc < task.c) ) {
-            if (task.cells[sr][sc].cellType != task.cells[fr][fc].cellType) {
-                for (CellSequence sequenceS : task.cells[sr][sc].oldCellSequences) {
-                    for (CellSequence sequenceF : task.cells[fr][fc].oldCellSequences) {
-                        // Check before copying size of sequence
-                        CellSequence newSequence = tryConcatRectangles(task, sequenceS, sequenceF);
-                        if (newSequence == null) {
-                        } else {
-                            task.cells[newSequence.minR][newSequence.minC].cellSequences.add(newSequence);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-
-    private static void findMergeForCell(TaskDTO task, int r, int c){
-        // cycle by first line
-        for (int j = 1; j < task.h; j++ ){
-            checkPartners(task, r, c, r, c+j);
-        }
-        // cycle by diapason
-        for (int i = 1; i < task.h; i++ ){
-            int dj = task.h / (i+1);
-            dj = dj - 1;
-            for (int j = -dj; j < dj + 1; j++ ){
-                checkPartners(task, r, c, r+i, c+j);
-            }
-        }
-    }
-
-    private static void loopForMerge(TaskDTO task){
-        nextTurnPreparing(task);
-        for (int i = 0; i < task.r; i++) {
-            for (int j = 0; j < task.c; j++) {
-                findMergeForCell(task, i,j);
-            }
-        }
-    }
-
-    private static CellSequence findSequenceToFill(TaskDTO task, int r, int c){
-        // check that the cell have not yet a sequence
+    private static CellSequence selectOptimalSequence(TaskDTO task, int r, int c) {
         CellSequence selectedSequence = null;
-        if (task.cells[r][c].cellSequences.isEmpty()){
+        int hSelected = 0;
+        if (!task.cells[r][c].cellSequences.isEmpty()) {
             // loop for select the min sequence
-            for (CellSequence sequence : task.cells[r][c].oldCellSequences) {
+            for (CellSequence sequence : task.cells[r][c].cellSequences) {
                 // check that the sequence start from the cell
                 if (selectedSequence == null) {
                     selectedSequence = sequence;
+                    hSelected = (selectedSequence.maxR - selectedSequence.minR + 1) * (selectedSequence.maxC - selectedSequence.minC + 1);
                 } else {
                     // select the min sequence
-                    if ((sequence.maxR - sequence.minR +1) * ( sequence.maxC- sequence.minC +1) > (selectedSequence.maxR - selectedSequence.minR +1) * ( selectedSequence.maxC- selectedSequence.minC +1)) {
+                    int hCur = (sequence.maxR - sequence.minR + 1) * (sequence.maxC - sequence.minC + 1);
+                    if ((hCur < hSelected) || ((hCur == hSelected) && (selectedSequence.maxR > sequence.maxR) )) {
                         selectedSequence = sequence;
+                        hSelected = hCur;
                     }
                 }
             }
@@ -180,52 +120,29 @@ public class Main {
         return selectedSequence;
     }
 
-    private static void fillCellsWithSequence(TaskDTO task, CellSequence sequence) {
-        for (int i = sequence.minR; i < (sequence.maxR + 1); i++) {
-            for (int j = sequence.minC; j < (sequence.maxC + 1); j++) {
-                task.cells[i][j].cellSequences.add(sequence);
-            }
-        }
-    }
-
-    // change on set sequence info in left top corner
-
-    private static ArrayList<CellSequence> loopForFill(TaskDTO task){
-        nextTurnPreparing(task);
-        ArrayList<CellSequence> selectedSequences =  new ArrayList<>();
+    private static ArrayList<CellSequence> loopForFinding(TaskDTO task) {
+        ArrayList<CellSequence> selectedSequences = new ArrayList<>();
         for (int i = 0; i < task.r; i++) {
             for (int j = 0; j < task.c; j++) {
-                // fill list of selected sequence
-                CellSequence selectedSequence = findSequenceToFill(task, i,j);
-                if (selectedSequence == null) {
-                } else {
-                    selectedSequences.add(selectedSequence);
-                    fillCellsWithSequence(task, selectedSequence);
+                if (task.cells[i][j].mainCellSequences == null) {
+                    findInCell(task, i, j);
+                    CellSequence selectedSequence = selectOptimalSequence(task, i, j);
+                    if (selectedSequence == null) {
+                    } else {
+                        fillCellsWithSequence(task, selectedSequence);
+                        selectedSequences.add(selectedSequence);
+                    }
                 }
             }
         }
         return selectedSequences;
     }
 
-    private static void outputSequences(ArrayList<CellSequence> sequences){
-        int score = 0;
-        int number = 0;
-        for (CellSequence sequence : sequences) {
-            number = ++number;
-            score = score + ((sequence.maxR - sequence.minR +1) * ( sequence.maxC- sequence.minC +1));
-            System.out.println(number + " " + sequence.minC + " " + sequence.minR  + " " + sequence.maxC + " " + sequence.maxR);
-        }
-        System.out.println("score: " + score);
-    }
-
     public static void main(String[] args) {
         System.out.println("check start " + now());
         TaskDTO task = loadFile();
-        loopForSequences(task);
-        System.out.println("check after sequences " + now());
-        loopForMerge(task);
-        System.out.println("check after merge " + now());
-        ArrayList<CellSequence> selectedSequence = loopForFill(task);
+        System.out.println("check after loading " + now());
+        ArrayList<CellSequence> selectedSequence = loopForFinding(task);
         System.out.println("check after fill " + now());
         outputSequences(selectedSequence);
         System.out.println(task.r);
