@@ -22,9 +22,9 @@ public class Main {
     private static TaskDTO loadFile() {
         TaskDTO task = new TaskDTO();
 
-//        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\small.in";
+        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\small.in";
 //        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\medium.in";
-        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\big.in";
+//        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\big.in";
 
         try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
             String[] fileContent = stream.toArray(String[]::new);
@@ -56,12 +56,20 @@ public class Main {
     private static void outputSequences(ArrayList<CellSequence> sequences) {
         int score = 0;
         int number = 0;
+        ArrayList<String> sequenseStrings = new ArrayList<>();
         for (CellSequence sequence : sequences) {
             number = ++number;
             score = score + ((sequence.maxR - sequence.minR + 1) * (sequence.maxC - sequence.minC + 1));
-            System.out.println(number + " " + sequence.minC + " " + sequence.minR + " " + sequence.maxC + " " + sequence.maxR);
+            System.out.println(sequence.minR + " " + sequence.minC + " " + sequence.maxR + " " + sequence.maxC);
+            sequenseStrings.add(sequence.minR + " " + sequence.minC + " " + sequence.maxR + " " + sequence.maxC);
         }
         System.out.println("score: " + score);
+        sequenseStrings.add(0, String.valueOf(number));
+        try {
+            Files.write(Paths.get("result.txt"), sequenseStrings);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static boolean checkPossibility(TaskDTO task, int sr, int sc, int fr, int fc) {
@@ -145,10 +153,5 @@ public class Main {
         ArrayList<CellSequence> selectedSequence = loopForFinding(task);
         System.out.println("check after fill " + now());
         outputSequences(selectedSequence);
-        System.out.println(task.r);
-        System.out.println(task.c);
-        System.out.println(task.l);
-        System.out.println(task.h);
-        Arrays.stream(task.pizza).forEach(System.out::println);
     }
 }
