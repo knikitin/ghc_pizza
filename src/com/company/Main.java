@@ -22,9 +22,9 @@ public class Main {
     private static TaskDTO loadFile() {
         TaskDTO task = new TaskDTO();
 
-        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\small.in";
+//        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\small.in";
 //        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\medium.in";
-//        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\big.in";
+        String fileName = "C:\\Work\\Java\\GoogleHashCode2018\\Task\\big.in";
 
         try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
             String[] fileContent = stream.toArray(String[]::new);
@@ -114,10 +114,10 @@ public class Main {
                 // check that the sequence start from the cell
                 if (selectedSequence == null) {
                     selectedSequence = sequence;
-                    hSelected = (selectedSequence.maxR - selectedSequence.minR + 1) * (selectedSequence.maxC - selectedSequence.minC + 1);
+                    hSelected = (selectedSequence.maxR - selectedSequence.minR + 1) * (selectedSequence.maxR - selectedSequence.minR + 1) + (selectedSequence.maxC - selectedSequence.minC + 1) * (selectedSequence.maxC - selectedSequence.minC + 1);
                 } else {
                     // select the min sequence
-                    int hCur = (sequence.maxR - sequence.minR + 1) * (sequence.maxC - sequence.minC + 1);
+                    int hCur = (selectedSequence.maxR - selectedSequence.minR + 1) * (selectedSequence.maxR - selectedSequence.minR + 1) + (selectedSequence.maxC - selectedSequence.minC + 1) * (selectedSequence.maxC - selectedSequence.minC + 1);
                     if ((hCur < hSelected) || ((hCur == hSelected) && (selectedSequence.maxR > sequence.maxR) )) {
                         selectedSequence = sequence;
                         hSelected = hCur;
