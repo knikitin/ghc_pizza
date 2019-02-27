@@ -23,23 +23,23 @@ fs.readdir(dataFolder, (err, files) => {
   });
 });
 
-fs.readdir(dataFolder, (err, files) => {
-  files.forEach(file => {
-    if (file.endsWith(".out")) {
-      console.log(file);
-      let ls = execFile('node', ['check', dataFolder + file], {shell: true}, 
-        (error, stdout, stderr) => {
-          if (error) {
-          throw error;
-          }
-          fs.appendFile(dataFolder + file + ".score", stdout, function(err) {
-            if(err) {
-                return console.log(err);
-            }
-            console.log("The file " + file + " was saved!");
-          });         
-        }
-      );
-    }
-  });
-});
+// fs.readdir(dataFolder, (err, files) => {
+//   files.forEach(file => {
+//     if (file.endsWith(".out")) {
+//       console.log(file);
+//       let ls = execFile('node', ['check', dataFolder + file], {shell: true}, 
+//         (error, stdout, stderr) => {
+//           if (error) {
+//           throw error;
+//           }
+//           fs.appendFile(dataFolder + file + ".score", stdout, function(err) {
+//             if(err) {
+//                 return console.log(err);
+//             }
+//             console.log("The file " + file + " was saved!");
+//           });         
+//         }
+//       );
+//     }
+//   });
+// });
